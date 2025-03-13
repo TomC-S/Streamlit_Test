@@ -1,4 +1,4 @@
 # Streamlit_Test
 streamlit
 pandas
-ploty
+ploty_express
