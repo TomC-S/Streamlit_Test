@@ -1,35 +1,26 @@
 import streamlit as st
-import plotly.graph_objects as go
+import plotly.express as px
 import numpy as np
-
+import pandas as pd
 
 st.title('Hello, Streamlit!')
-st.write('This is my first Streamlit app.')
-
+st.write('Kill in Carriage')
 
 # Generate test data
 np.random.seed(42)
 n = 50  # Number of points
-x = np.random.rand(n) * 10
-y = np.random.rand(n) * 10
-z = np.random.rand(n) * 10
+data = pd.DataFrame({
+    'x': np.random.rand(n) * 10,
+    'y': np.random.rand(n) * 10,
+    'z': np.random.rand(n) * 10
+})
 
-# Create 3D scatter plot
-fig = go.Figure(data=[go.Scatter3d(
-    x=x, y=y, z=z,
-    mode='markers',
-    marker=dict(size=6, color=z, colorscale='Viridis', opacity=0.8)
-)])
-
-# Layout adjustments
-fig.update_layout(
+# Create 3D scatter plot using plotly express
+fig = px.scatter_3d(
+    data, x='x', y='y', z='z',
+    color='z', size_max=6,
     title='3D Scatter Plot',
-    scene=dict(
-        xaxis_title='X Axis',
-        yaxis_title='Y Axis',
-        zaxis_title='Z Axis'
-    ),
-    margin=dict(l=0, r=0, b=0, t=40)
+    labels={'x': 'X Axis', 'y': 'Y Axis', 'z': 'Z Axis'}
 )
 
 # Streamlit app
