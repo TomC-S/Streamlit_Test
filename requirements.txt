@@ -1,4 +1,5 @@
 # Streamlit_Test
 streamlit
 pandas
+virtualenv
 ploty_express
