@@ -80,3 +80,47 @@ fig_animated = px.scatter_3d(
 # Display both plots
 st.plotly_chart(fig_static)
 st.plotly_chart(fig_animated)
+
+# ---- Building Placement Visualization ----
+
+# CSV Upload Option for Buildings
+uploaded_building_file = st.file_uploader("Upload Buildings CSV file", type=["csv"], key="buildings")
+if uploaded_building_file is not None:
+    df_buildings = pd.read_csv(uploaded_building_file)
+    if {'properties.building_id', 'properties.loc_x', 'properties.loc_y', 'properties.loc_z', 'properties.carriage_id'}.issubset(df_buildings.columns):
+        st.success("Buildings CSV loaded successfully!")
+    else:
+        st.error("Buildings CSV must contain columns: properties.building_id, properties.loc_x, properties.loc_y, properties.loc_z, and properties.carriage_id")
+        st.stop()
+else:
+    df_buildings = None
+
+if df_buildings is not None:
+    st.title("3D Scatter Plot for Buildings")
+
+    # Streamlit selector for filtering building_id
+    building_id_options = ['All'] + sorted(df_buildings['properties.building_id'].unique().tolist())
+    selected_building_id = st.selectbox("Select Building ID", building_id_options)
+    
+    # Streamlit selector for filtering building carriage_id
+    building_carriage_options = ['All'] + sorted(df_buildings['properties.carriage_id'].unique().tolist())
+    selected_building_carriage = st.selectbox("Select Carriage ID for Buildings", building_carriage_options)
+
+    # Filter buildings data based on selections
+    filtered_buildings = df_buildings
+    if selected_building_id != 'All':
+        filtered_buildings = filtered_buildings[filtered_buildings['properties.building_id'] == selected_building_id]
+    if selected_building_carriage != 'All':
+        filtered_buildings = filtered_buildings[filtered_buildings['properties.carriage_id'] == selected_building_carriage]
+
+    # Static 3D Scatter Plot for Buildings
+    fig_buildings = px.scatter_3d(
+        filtered_buildings, x='properties.loc_x', y='properties.loc_y', z='properties.loc_z',
+        color='properties.building_id',  # Different colors for different buildings
+        size_max=6,
+        title='3D Scatter Plot for Buildings',
+        labels={'properties.loc_x': 'X Axis', 'properties.loc_y': 'Y Axis', 'properties.loc_z': 'Z Axis', 'properties.carriage_id': 'Carriage ID', 'properties.building_id': 'Building ID'}
+    )
+
+    # Display buildings plot
+    st.plotly_chart(fig_buildings)
