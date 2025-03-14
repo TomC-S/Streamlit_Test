@@ -13,19 +13,19 @@ uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
 
 if uploaded_file is not None:
     data = pd.read_csv(uploaded_file)
-    if {'x', 'y', 'z', 'cause'}.issubset(data.columns):
+    if {'loc_x', 'loc_y', 'loc_z', 'cause'}.issubset(data.columns):
         st.success("CSV loaded successfully!")
     else:
-        st.error("CSV must contain columns: x, y, z, and cause")
+        st.error("CSV must contain columns:loc_x, loc_y, loc_z, and cause")
         st.stop()
 else:
     # Generate test data if no file is uploaded
     np.random.seed(42)
     n = 50  # Number of points
     data = pd.DataFrame({
-        'x': np.random.rand(n) * 10,
-        'y': np.random.rand(n) * 10,
-        'z': np.random.rand(n) * 10,
+        'loc_x': np.random.rand(n) * 10,
+        'loc_y': np.random.rand(n) * 10,
+        'loc_z': np.random.rand(n) * 10,
         'cause': np.random.choice(['A', 'B', 'C'], n)  # Random categories
     })
 
@@ -41,7 +41,7 @@ else:
 
 # Create 3D scatter plot using plotly express
 fig = px.scatter_3d(
-    filtered_data, x='x', y='y', z='z',
+    filtered_data, x='loc_x', y='loc_y', z='loc_z',
     color='cause',  # Different colors for different causes
     size_max=6,
     title='3D Scatter Plot',
