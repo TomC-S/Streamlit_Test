@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 
 st.title('Test McTest!')
-st.write('Kills in Carriage')
+st.write('Deaths in Carriage')
+
+st.write('Drop CSV here and use the filter to see different causes of death')
 
 # CSV Upload Option
 uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
