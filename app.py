@@ -30,6 +30,7 @@ else:
         'properties.loc_z': np.random.rand(n) * 10,
         'properties.cause': np.random.choice(['A', 'B', 'C'], n),  # Random categories
         'properties.carriage_id': np.random.choice(['Car1', 'Car2', 'Car3'], n),  # Random carriage IDs
+        'properties.server_id': np.random.choice(['server1', 'server2', 'server3'], n),
         # 'time': np.random.randint(current_time, current_time + 3600, n)  # Random Unix timestamps in next hour
     })
      #data['time'] = pd.to_datetime(data['time'], unit='s').dt.floor('min')  # Convert to datetime and round to minute
@@ -40,7 +41,9 @@ selected_cause = st.selectbox("Select Cause to Display", cause_options)
 
 # Streamlit selector for filtering carriage_id
 carriage_options = ['All'] + sorted(data['properties.carriage_id'].unique().tolist())
+server_options = ['All'] + sorted(data['properties.server_id'].unique().tolist())
 selected_carriage = st.selectbox("Select Carriage ID to Display", carriage_options)
+selected_server= st.selectbox("Select Carriage ID to Display", server_options)
 
 # Filter data based on selections
 filtered_data = data
@@ -48,6 +51,8 @@ if selected_cause != 'All':
     filtered_data = filtered_data[filtered_data['properties.cause'] == selected_cause]
 if selected_carriage != 'All':
     filtered_data = filtered_data[filtered_data['properties.carriage_id'] == selected_carriage]
+if selected_server != 'All':
+    filtered_data = filtered_data[filtered_data['properties.server_id'] == selected_server]
 
 # Ensure animation shows all kills up to the current time frame
 # filtered_data = filtered_data.sort_values(by='time')
@@ -106,12 +111,16 @@ if df_buildings is not None:
     building_carriage_options = ['All'] + sorted(df_buildings['properties.carriage_id'].unique().tolist())
     selected_building_carriage = st.selectbox("Select Carriage ID for Buildings", building_carriage_options)
 
+    server_options = ['All'] + sorted(data['properties.server_id'].unique().tolist())
+    selected_server= st.selectbox("Select Carriage ID to Display", server_options)
     # Filter buildings data based on selections
     filtered_buildings = df_buildings
     if selected_building_id != 'All':
         filtered_buildings = filtered_buildings[filtered_buildings['properties.building_id'] == selected_building_id]
     if selected_building_carriage != 'All':
         filtered_buildings = filtered_buildings[filtered_buildings['properties.carriage_id'] == selected_building_carriage]
+    if selected_server != 'All':
+         filtered_data = filtered_data[filtered_data['properties.server_id'] == selected_server]
 
     # Static 3D Scatter Plot for Buildings
     fig_buildings = px.scatter_3d(
