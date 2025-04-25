@@ -136,6 +136,48 @@ if required_cols.issubset(df_interaction.columns):
         .rename(columns={'index': 'Weapon', 'item_id': 'Uses'})
     )
 
+
+    # ==============================
+    # 📈 Kill Count Distribution Line Chart
+    # ==============================
+    st.markdown("### 📈 Number of Players by Kill Count (Line Chart)")
+
+    # Rebuild top_killers to count kills per player
+    top_killers = (
+        filtered_interaction['distinct_id']
+        .value_counts()
+        .reset_index()
+    )
+    top_killers.columns = ['Player', 'Kills']
+
+    # Count how many players have each kill total
+    kill_distribution = top_killers['Kills'].value_counts().reset_index()
+    kill_distribution.columns = ['Kills', 'Number of Players']
+    kill_distribution = kill_distribution.sort_values(by='Kills')
+
+    # Create the line chart
+    fig_kill_dist = go.Figure()
+
+    fig_kill_dist.add_trace(go.Scatter(
+        x=kill_distribution['Kills'],  # Kill count
+        y=kill_distribution['Number of Players'],  # How many players had that many kills
+        mode='lines+markers',
+        line=dict(width=2),
+        hovertemplate='Kills: %{x}<br>Players: %{y}<extra></extra>'
+    ))
+
+    fig_kill_dist.update_layout(
+        title="Distribution of Kill Counts Across Players",
+        xaxis_title="Number of Kills",
+        yaxis_title="Number of Players",
+        title_x=0.5,
+        showlegend=False
+    )
+
+    st.plotly_chart(fig_kill_dist, use_container_width=True)
+
+
+
     st.markdown("### 🔫 Top Weapons Used")
     st.dataframe(top_weapons.head(30), use_container_width=True)
 
