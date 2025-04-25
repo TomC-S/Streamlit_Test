@@ -127,7 +127,7 @@ if required_cols.issubset(df_interaction.columns):
     )
 
     st.markdown("### 🏆 Top  Killers")
-    st.dataframe(top_killers.head(100), use_container_width=True)
+    st.dataframe(top_killers.head(1000), use_container_width=True)
 
     top_weapons = (
         filtered_interaction['item_id']
