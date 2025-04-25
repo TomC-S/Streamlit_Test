@@ -198,3 +198,53 @@ if required_cols.issubset(df_interaction.columns):
 
 else:
     st.warning("Interaction data must include: 'distinct_id', 'target_player_id', 'server_id', and 'item_id'.")
+
+# ================================
+# 🔍 Player Breakdown & Rivalries
+# ================================
+st.markdown("---")
+st.header("🔍 Player Combat Breakdown")
+
+# Collect all unique player names from both attacker and target columns
+all_players = sorted(set(df_interaction['distinct_id']).union(df_interaction['target_player_id']))
+selected_player = st.selectbox("Select a Player to View Detailed Stats", all_players)
+
+if selected_player:
+    # Filter for kills made by the player
+    kills = filtered_interaction[filtered_interaction['distinct_id'] == selected_player]
+    kills_summary = kills['target_player_id'].value_counts().reset_index()
+    kills_summary.columns = ['Target', 'Times Killed']
+
+    # Filter for deaths suffered by the player
+    deaths = filtered_interaction[filtered_interaction['target_player_id'] == selected_player]
+    deaths_summary = deaths['distinct_id'].value_counts().reset_index()
+    deaths_summary.columns = ['Attacker', 'Times Killed By']
+
+    # Summary stats
+    total_kills = len(kills)
+    total_deaths = len(deaths)
+
+    st.markdown(f"### 📊 Stats for `{selected_player}`")
+    st.markdown(f"- **☠️ Kills Made:** `{total_kills}`")
+    st.markdown(f"- **💀 Times Killed:** `{total_deaths}`")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("#### ☠️ Players They Killed")
+        st.dataframe(kills_summary, use_container_width=True)
+
+    with col2:
+        st.markdown("#### 💀 Players Who Killed Them")
+        st.dataframe(deaths_summary, use_container_width=True)
+
+    # Bonus: Rivalries
+    rivalries = pd.merge(kills_summary, deaths_summary, left_on='Target', right_on='Attacker')
+    if not rivalries.empty:
+        rivalries['Net Kills'] = rivalries['Times Killed'] - rivalries['Times Killed By']
+        rivalries = rivalries.sort_values(by='Net Kills', ascending=False)
+
+        st.markdown("### 🔄 Top Rivalries (Mutual Kill Exchanges)")
+        st.dataframe(rivalries[['Target', 'Times Killed', 'Times Killed By', 'Net Kills']], use_container_width=True)
+    else:
+        st.info("No rivalries found for this player (no mutual kills).")
