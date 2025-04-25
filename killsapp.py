@@ -126,8 +126,8 @@ if required_cols.issubset(df_interaction.columns):
         .rename(columns={'index': 'Player', 'distinct_id': 'Kills'})
     )
 
-    st.markdown("### 🏆 Top 20 Killers")
-    st.dataframe(top_killers.head(20), use_container_width=True)
+    st.markdown("### 🏆 Top  Killers")
+    st.dataframe(top_killers.head(100), use_container_width=True)
 
     top_weapons = (
         filtered_interaction['item_id']
@@ -136,8 +136,8 @@ if required_cols.issubset(df_interaction.columns):
         .rename(columns={'index': 'Weapon', 'item_id': 'Uses'})
     )
 
-    st.markdown("### 🔫 Top 20 Weapons Used")
-    st.dataframe(top_weapons.head(20), use_container_width=True)
+    st.markdown("### 🔫 Top Weapons Used")
+    st.dataframe(top_weapons.head(30), use_container_width=True)
 
     # Build graph
     G = nx.DiGraph()
