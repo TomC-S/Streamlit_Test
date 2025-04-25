@@ -199,6 +199,45 @@ if required_cols.issubset(df_interaction.columns):
 else:
     st.warning("Interaction data must include: 'distinct_id', 'target_player_id', 'server_id', and 'item_id'.")
 
+# ============================
+# 🔥 Global Top Player Rivalries
+# ============================
+st.markdown("---")
+st.header("🔥 Top Global Player Rivalries")
+
+# Group kills and deaths
+duels = filtered_interaction.groupby(['distinct_id', 'target_player_id']).size().reset_index(name='kills')
+
+# Merge with reversed direction to find mutual kills
+rival_duels = pd.merge(
+    duels,
+    duels,
+    left_on=['distinct_id', 'target_player_id'],
+    right_on=['target_player_id', 'distinct_id'],
+    suffixes=('_from', '_to')
+)
+
+# Avoid duplicates (A vs B and B vs A)
+rival_duels['sorted_pair'] = rival_duels.apply(lambda row: tuple(sorted([row['distinct_id_from'], row['target_player_id_from']])), axis=1)
+rival_duels = rival_duels.drop_duplicates('sorted_pair')
+
+# Rename and organize columns
+rivalries_df = rival_duels.rename(columns={
+    'distinct_id_from': 'Player A',
+    'target_player_id_from': 'Player B',
+    'kills_from': 'A → B Kills',
+    'kills_to': 'B → A Kills'
+})
+
+rivalries_df['Total Kills'] = rivalries_df['A → B Kills'] + rivalries_df['B → A Kills']
+rivalries_df['Net Score'] = rivalries_df['A → B Kills'] - rivalries_df['B → A Kills']
+
+# Sort by total interactions
+top_rivalries = rivalries_df.sort_values(by='Total Kills', ascending=False).head(20)
+
+st.dataframe(top_rivalries[['Player A', 'Player B', 'A → B Kills', 'B → A Kills', 'Total Kills', 'Net Score']], use_container_width=True)
+
+
 # ================================
 # 🔍 Player Breakdown & Rivalries
 # ================================
