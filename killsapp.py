@@ -140,34 +140,34 @@ if required_cols.issubset(df_interaction.columns):
     # ==============================
     # 📈 Kill Count Distribution Line Chart
     # ==============================
-    st.markdown("### 📈 Number of Players by Kill Count (Line Chart)")
+    st.markdown("### 📈 Number of Players by Kill Count (Full Dataset Line Chart)")
 
-    # Rebuild top_killers to count kills per player
-    top_killers = (
-        filtered_interaction['distinct_id']
+    # Count total kills per player across ALL uploaded data (not just filtered by server, etc.)
+    full_kill_counts = (
+        df_interaction['distinct_id']
         .value_counts()
         .reset_index()
     )
-    top_killers.columns = ['Player', 'Kills']
+    full_kill_counts.columns = ['Player', 'Kills']
 
-    # Count how many players have each kill total
-    kill_distribution = top_killers['Kills'].value_counts().reset_index()
+    # Count how many players had each specific kill total
+    kill_distribution = full_kill_counts['Kills'].value_counts().reset_index()
     kill_distribution.columns = ['Kills', 'Number of Players']
     kill_distribution = kill_distribution.sort_values(by='Kills')
 
-    # Create the line chart
+    # Plot line chart
     fig_kill_dist = go.Figure()
 
     fig_kill_dist.add_trace(go.Scatter(
-        x=kill_distribution['Kills'],  # Kill count
-        y=kill_distribution['Number of Players'],  # How many players had that many kills
+        x=kill_distribution['Kills'],
+        y=kill_distribution['Number of Players'],
         mode='lines+markers',
         line=dict(width=2),
         hovertemplate='Kills: %{x}<br>Players: %{y}<extra></extra>'
     ))
 
     fig_kill_dist.update_layout(
-        title="Distribution of Kill Counts Across Players",
+        title="Distribution of Kill Counts Across All Uploaded Players",
         xaxis_title="Number of Kills",
         yaxis_title="Number of Players",
         title_x=0.5,
