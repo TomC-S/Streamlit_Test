@@ -112,7 +112,7 @@ if df_buildings is not None:
     selected_building_carriage = st.selectbox("Select Carriage ID for Buildings", building_carriage_options)
 
     server_options = ['All'] + sorted(data['properties.server_id'].unique().tolist())
-    selected_server= st.selectbox("Select Carriage ID to Display", server_options)
+    selected_server= st.selectbox("Select Server ID  to Display", server_options)
     # Filter buildings data based on selections
     filtered_buildings = df_buildings
     if selected_building_id != 'All':
