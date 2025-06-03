@@ -1,24 +1,19 @@
 import streamlit as st
 import plotly.express as px
-import numpy as np
 import pandas as pd
-import time
 
-# Streamlit app title
 st.title("Shop Data")
 
 # Upload CSV
 uploaded_file = st.file_uploader("Choose a Mixpanel CSV file", type="csv")
 
 if uploaded_file:
-    # Read CSV
     df = pd.read_csv(uploaded_file)
 
-    # Convert time if exists
     if 'time' in df.columns:
         df['datetime'] = pd.to_datetime(df['time'], unit='ms')
 
-    # Define target blueprint items
+    # Define blueprint groups
     weapon_items = [
         "Exchange.Blueprint.Weapon.Rifle_T2_AlphaStrike_Teal",
         "Exchange.Blueprint.Weapon.Rifle_T2_AlphaStrike_Red",
@@ -39,7 +34,6 @@ if uploaded_file:
     base_items = [
         "Exchange.Blueprint.Buildable.RecordPlayer",
     ]
-    # Battle pass By page 
     bp_page_1 = [
         "Exchange.Blueprint.Clothing.Rocker.TShirt",
         "Exchange.Blueprint.Clothing.Rocker.Gloves",
@@ -65,72 +59,85 @@ if uploaded_file:
         "Exchange.Blueprint.Clothing.Rocker.Jacket",
         "Exchange.KnowledgeLoadout.ImprovShotgun",
         "Exchange.Blueprint.Weapon.Rifle_T3_Reskin",
-
     ]
-    # Get columns for knowledge granted
+
+    # Get knowledge columns and melt to long format
     knowledge_columns = [col for col in df.columns if col.startswith("properties.knowledge_granted.")]
+    melted_df = df.melt(id_vars=["distinct_id"], value_vars=knowledge_columns, value_name="Blueprint").dropna()
+    unique_grants = melted_df.drop_duplicates(subset=["distinct_id", "Blueprint"])
 
-    # Count occurrences
-    counts = {}
-    for item in weapon_items:
-        counts[item] = (df[knowledge_columns] == item).sum().sum()
+    # Generic function to count distinct_id per blueprint
+    def count_group(group_items):
+        filtered = unique_grants[unique_grants["Blueprint"].isin(group_items)]
+        return (
+            filtered.groupby("Blueprint")["distinct_id"]
+            .nunique()
+            .reset_index()
+            .rename(columns={"distinct_id": "Count"})
+        )
 
-    # Convert to DataFrame
-    counts_df = pd.DataFrame(list(counts.items()), columns=["Blueprint", "Count"])
+    # Create and plot each section
+    def show_chart(title, items):
+        data = count_group(items)
+        st.subheader(title)
+        st.dataframe(data)
+        fig = px.bar(
+            data,
+            x="Blueprint",
+            y="Count",
+            title=title,
+            labels={"Blueprint": "Blueprint", "Count": "Unique Players"},
+            text_auto=True
+        )
+        fig.update_layout(xaxis_tickangle=-45)
+        st.plotly_chart(fig)
 
-    cosmetic_counts = {}
-    for item in cosmetic_items:
-        cosmetic_counts[item] = (df[knowledge_columns] == item).sum().sum()
+    # Render each section
+    show_chart("Weapon Counts", weapon_items)
+    show_chart("Cosmetic Counts", cosmetic_items)
+    show_chart("Base Counts", base_items)
 
-    # Convert to DataFrame
-    cosmetic_counts_df = pd.DataFrame(list(cosmetic_counts.items()), columns=["Blueprint", "Count"])
-
-    base_counts = {}
-    for item in base_items:
-        base_counts[item] = (df[knowledge_columns] == item).sum().sum()
-
-    # Convert to DataFrame
-    base_count_df = pd.DataFrame(list(base_counts.items()), columns=["Blueprint", "Count"])
-
-    # Display table
-    st.subheader("Weapon Counts")
-    st.dataframe(counts_df)
-
-   # Display bar chart with Plotly
-    st.subheader("Weapons")
-    fig = px.bar(
-        counts_df,
-        x="Blueprint",
-        y="Count",
-        title="Weapon Counts",
-        labels={"Blueprint": "Blueprint", "Count": "Acquisitions"},
-        text_auto=True
-    )
-    fig.update_layout(xaxis_tickangle=-45)
-    st.plotly_chart(fig)
-
-    st.subheader("Cosmetics")
-    fig = px.bar(
-        cosmetic_counts_df,
-        x="Blueprint",
-        y="Count",
-        title="Cosmetic Counts",
-        labels={"Blueprint": "Blueprint", "Count": "Acquisitions"},
-        text_auto=True
-    )
-    fig.update_layout(xaxis_tickangle=-45)
-    st.plotly_chart(fig)
-
-    st.subheader("Base")
-    fig = px.bar(
-        base_count_df,
-        x="Blueprint",
-        y="Count",
-        title="Cosmetic Counts",
-        labels={"Blueprint": "Blueprint", "Count": "Acquisitions"},
-        text_auto=True
-    )
-    fig.update_layout(xaxis_tickangle=-45)
-    st.plotly_chart(fig)
-
+    # Battle Pass Section
     st.header("Battle Pass")
+
+    def count_bp_page(items, page_name):
+        df_page = count_group(items)
+        df_page["Page"] = page_name
+        return df_page
+
+    bp1_df = count_bp_page(bp_page_1, "Page 1")
+    bp2_df = count_bp_page(bp_page_2, "Page 2")
+    bp3_df = count_bp_page(bp_page_3, "Page 3")
+    bp_df = pd.concat([bp1_df, bp2_df, bp3_df], ignore_index=True)
+
+    for page, items in [("Page 1", bp_page_1), ("Page 2", bp_page_2), ("Page 3", bp_page_3)]:
+        # Filter and count unique acquisitions
+        page_df = count_group(items)
+        page_df["Page"] = page
+
+        # Plot
+        st.subheader(f"Battle Pass {page}")
+        fig = px.bar(
+            page_df,
+            x="Blueprint",
+            y="Count",
+            title=f"Battle Pass {page} - Unique Player Acquisitions",
+            labels={"Blueprint": "Blueprint", "Count": "Unique Players"},
+            text_auto=True
+        )
+        fig.update_layout(xaxis_tickangle=-45)
+        st.plotly_chart(fig)
+
+          # Get players who have all the blueprints on this page
+        all_items_df = (
+            unique_grants[unique_grants["Blueprint"].isin(items)]
+            .groupby("distinct_id")["Blueprint"]
+            .nunique()
+            .reset_index()
+        )
+        full_owners = all_items_df[all_items_df["Blueprint"] == len(items)]["distinct_id"]
+
+        # Display count and IDs
+        st.markdown(f"**Players who acquired all {len(items)} rewards on {page}: {len(full_owners)}**")
+        st.markdown("**Player IDs:**")
+        st.write(full_owners.tolist())
