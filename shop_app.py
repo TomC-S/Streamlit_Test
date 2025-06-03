@@ -97,6 +97,19 @@ if uploaded_file:
     show_chart("Cosmetic Counts", cosmetic_items)
     show_chart("Base Counts", base_items)
 
+    # Combine all shop items
+    shop_items = weapon_items + cosmetic_items + base_items
+
+    # Get players who received any shop item
+    shop_spenders = unique_grants[unique_grants["Blueprint"].isin(shop_items)]["distinct_id"].unique()
+
+    # Display total shop spenders
+    st.header("Shop Spend Summary")
+    st.markdown(f"**Total players who acquired at least one item from the shop: {len(shop_spenders)}**")
+
+    st.markdown("**Player IDs:**")
+    st.write(shop_spenders.tolist())
+
     # Battle Pass Section
     st.header("Battle Pass")
 
