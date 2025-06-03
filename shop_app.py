@@ -7,85 +7,102 @@ import time
 # Streamlit app title
 st.title("Shop Data")
 
-# File uploader
-uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+# Upload CSV
+uploaded_file = st.file_uploader("Choose a Mixpanel CSV file", type="csv")
 
-# Load or generate data
-if uploaded_file is not None:
-    data = pd.read_csv(uploaded_file)
-    required_columns = {
-        'properties.loc_x', 'properties.loc_y', 'properties.loc_z',
-        'properties.cause', 'properties.carriage_id', 'properties.server_id'
-    }
-    if not required_columns.issubset(data.columns):
-        st.error("CSV must contain columns: loc_x, loc_y, loc_z, cause, carriage_id, server_id")
-        st.stop()
-    st.success("CSV loaded successfully!")
-else:
-    # Generate test data
-    np.random.seed(42)
-    n = 100
-    data = pd.DataFrame({
-        'properties.loc_x': np.random.rand(n) * 10,
-        'properties.loc_y': np.random.rand(n) * 10,
-        'properties.loc_z': np.random.rand(n) * 10,
-        'properties.cause': np.random.choice(['A', 'B', 'C'], n),
-        'properties.carriage_id': np.random.choice(['Car1', 'Car2', 'Car3'], n),
-        'properties.server_id': np.random.choice(['server1', 'server2', 'server3'], n)
-    })
+if uploaded_file:
+    # Read CSV
+    df = pd.read_csv(uploaded_file)
 
-# Sidebar filters
-st.sidebar.header("Filters")
+    # Convert time if exists
+    if 'time' in df.columns:
+        df['datetime'] = pd.to_datetime(df['time'], unit='ms')
 
-# Cause filter
-cause_options = ['All'] + sorted(data['properties.cause'].unique())
-selected_cause = st.sidebar.selectbox("Select Cause", cause_options)
+    # Define target blueprint items
+    weapon_items = [
+        "Exchange.Blueprint.Weapon.Rifle_T2_AlphaStrike_Teal",
+        "Exchange.Blueprint.Weapon.Rifle_T2_AlphaStrike_Red",
+        "Exchange.Blueprint.Weapon.Rifle_T2_AlphaStrike_Blue"
+    ]
+    cosmetic_items = [
+        "Exchange.Blueprint.Clothing.ScrapPunk.Boots",
+        "Exchange.Blueprint.Clothing.ScrapPunk.Gloves",
+        "Exchange.Blueprint.Clothing.ScrapPunk.Jacket",
+        "Exchange.Blueprint.Clothing.ScrapPunk.Pants",
+        "Exchange.Blueprint.Clothing.ScrapPunk.Singlet",
+        "Exchange.Blueprint.Clothing.ScrapPunk.Headband",
+        "Exchange.Blueprint.Armor.GasMask_T3_ToxicSkin",
+        "Exchange.Blueprint.Armor.GasMask_T3_ToxicRedSkin",
+        "Exchange.Blueprint.Armor.GasMask_T3_ToxicSkin_Spiky",
+        "Exchange.Blueprint.Armor.GasMask_T3_ToxicZombieSkin"
+    ]
+    base_items = [
+        "Exchange.Blueprint.Buildable.RecordPlayer",
+    ]
+    # Get columns for knowledge granted
+    knowledge_columns = [col for col in df.columns if col.startswith("properties.knowledge_granted.")]
 
-# Carriage ID filter
-carriage_options = ['All'] + sorted(data['properties.carriage_id'].unique())
-selected_carriage = st.sidebar.selectbox("Select Carriage ID", carriage_options)
+    # Count occurrences
+    counts = {}
+    for item in weapon_items:
+        counts[item] = (df[knowledge_columns] == item).sum().sum()
 
-# Server filter
-server_options = ['All'] + sorted(data['properties.server_id'].unique())
-selected_server = st.sidebar.selectbox("Select Server", server_options)
+    # Convert to DataFrame
+    counts_df = pd.DataFrame(list(counts.items()), columns=["Blueprint", "Count"])
 
-# Apply filters
-filtered_data = data.copy()
-if selected_cause != 'All':
-    filtered_data = filtered_data[filtered_data['properties.cause'] == selected_cause]
-if selected_carriage != 'All':
-    filtered_data = filtered_data[filtered_data['properties.carriage_id'] == selected_carriage]
-if selected_server != 'All':
-    filtered_data = filtered_data[filtered_data['properties.server_id'] == selected_server]
+    cosmetic_counts = {}
+    for item in cosmetic_items:
+        cosmetic_counts[item] = (df[knowledge_columns] == item).sum().sum()
 
-# 3D Scatter Plot
-fig_static = px.scatter_3d(
-    filtered_data.copy(),
-    x='properties.loc_x', y='properties.loc_y', z='properties.loc_z',
-    color='properties.cause',
-    title='3D Scatter Plot (Filtered)',
-    labels={
-        'properties.loc_x': 'X',
-        'properties.loc_y': 'Y',
-        'properties.loc_z': 'Z',
-        'properties.cause': 'Cause'
-    }
-)
+    # Convert to DataFrame
+    cosmetic_counts_df = pd.DataFrame(list(cosmetic_counts.items()), columns=["Blueprint", "Count"])
 
-# Display scatter plot
-st.plotly_chart(fig_static, use_container_width=True)
+    base_counts = {}
+    for item in base_items:
+        base_counts[item] = (df[knowledge_columns] == item).sum().sum()
 
-# Pie Chart of Cause Distribution
-cause_counts = filtered_data['properties.cause'].value_counts().reset_index()
-cause_counts.columns = ['Cause', 'Count']
+    # Convert to DataFrame
+    base_count_df = pd.DataFrame(list(base_counts.items()), columns=["Blueprint", "Count"])
 
-fig_pie = px.pie(
-    cause_counts.copy(),
-    names='Cause',
-    values='Count',
-    title='Distribution of Causes',
-    hole=0.3
-)
+    # Display table
+    st.subheader("Weapon Counts")
+    st.dataframe(counts_df)
 
-# Display pie chart
-st.plotly_chart(fig_pie, use_container_width=True)
+   # Display bar chart with Plotly
+    st.subheader("Weapons")
+    fig = px.bar(
+        counts_df,
+        x="Blueprint",
+        y="Count",
+        title="Weapon Counts",
+        labels={"Blueprint": "Blueprint", "Count": "Acquisitions"},
+        text_auto=True
+    )
+    fig.update_layout(xaxis_tickangle=-45)
+    st.plotly_chart(fig)
+
+    st.subheader("Cosmetics")
+    fig = px.bar(
+        cosmetic_counts_df,
+        x="Blueprint",
+        y="Count",
+        title="Cosmetic Counts",
+        labels={"Blueprint": "Blueprint", "Count": "Acquisitions"},
+        text_auto=True
+    )
+    fig.update_layout(xaxis_tickangle=-45)
+    st.plotly_chart(fig)
+
+    st.subheader("Base")
+    fig = px.bar(
+        base_count_df,
+        x="Blueprint",
+        y="Count",
+        title="Cosmetic Counts",
+        labels={"Blueprint": "Blueprint", "Count": "Acquisitions"},
+        text_auto=True
+    )
+    fig.update_layout(xaxis_tickangle=-45)
+    st.plotly_chart(fig)
+
+    st.header("Battle Pass")
