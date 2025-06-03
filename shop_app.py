@@ -39,6 +39,34 @@ if uploaded_file:
     base_items = [
         "Exchange.Blueprint.Buildable.RecordPlayer",
     ]
+    # Battle pass By page 
+    bp_page_1 = [
+        "Exchange.Blueprint.Clothing.Rocker.TShirt",
+        "Exchange.Blueprint.Clothing.Rocker.Gloves",
+        "Exchange.Blueprint.Clothing.Rocker.Boots",
+        "Exchange.Blueprint.Armor.GasMask_T3_SkullSkin",
+        "Exchange.KnowledgeLoadout.ResourceKit",
+        "Exchange.Blueprint.Armor.Perks.Gunner",
+        "Exchange.Blueprint.Armor.Perks.Raider",
+        "Exchange.Blueprint.Weapon.RifleT2Reskin",
+    ]
+    bp_page_2 = [
+        "Exchange.Blueprint.Clothing.Rocker.Headphones",
+        "Exchange.Blueprint.Clothing.Rocker.Headband",
+        "Exchange.Blueprint.Clothing.Rocker.Mask",
+        "Exchange.Blueprint.Clothing.Rocker.Pants",
+        "Exchange.KnowledgeLoadout.BaseInABox",
+        "Exchange.Blueprint.Armor.Perks.Craftsman",
+        "Exchange.Blueprint.Armor.Perks.Rogue",
+        "Exchange.Blueprint.Buildable.bedroll_Reskin"
+    ]
+    bp_page_3 = [
+        "Exchange.KnowledgeLoadout.PlasticSMG",
+        "Exchange.Blueprint.Clothing.Rocker.Jacket",
+        "Exchange.KnowledgeLoadout.ImprovShotgun",
+        "Exchange.Blueprint.Weapon.Rifle_T3_Reskin",
+
+    ]
     # Get columns for knowledge granted
     knowledge_columns = [col for col in df.columns if col.startswith("properties.knowledge_granted.")]
 
